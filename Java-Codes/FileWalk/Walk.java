@@ -8,12 +8,7 @@ import java.nio.file.Paths;
 public class Walk {
     private final static int BUFFER_SIZE = 8192;
 
-    private static void error(String mess) {
-        System.err.println(mess);
-        System.exit(0);
-    }
-
-    private static String hash(String filename) {
+    public static String hash(String filename) {
         final int PRIME_KEY = 0x01000193;
         int res = 0x811c9dc5;
         try (FileInputStream fileInputStream = new FileInputStream(filename)) {
@@ -25,14 +20,14 @@ public class Walk {
                 }
             }
         } catch (IOException e) {
-            return "00000000";
+            return "00000000 " + filename + '\n';
         }
-        return String.format("%08x", res);
+        return String.format("%08x", res) + ' ' + filename + '\n';
     }
 
     public static void main(String[] args) {
         if (args.length != 2) {
-            error("Invalid count of arguments");
+            Helper.error("Invalid count of arguments");
         }
         String inputFile = args[0];
         String outputFile = args[1];
@@ -43,14 +38,16 @@ public class Walk {
             }
             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputFile), StandardCharsets.UTF_8));
             while (filename != null) {
-                writer.write(hash(filename) + ' ' + filename + '\n');
+                try {
+                    writer.write(hash(filename));
+                } catch (IOException ignored) {}
                 filename = reader.readLine();
             }
             writer.close();
         } catch (FileNotFoundException e) {
-            error("File with filenames to hash not found");
+            Helper.error("File with filenames to hash not found");
         } catch (IOException e) {
-            error("An error occurred. " + e.getMessage());
+            Helper.error("An error occurred. " + e.getMessage());
         }
     }
 }
