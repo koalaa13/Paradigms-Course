@@ -11,7 +11,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 public class RecursiveWalk {
     public static void main(String[] args) {
         if (args == null || args.length != 2 || args[0] == null || args[1] == null) {
-            System.err.println("Invalid arguments. Use Walk <input file> <output file>");
+            System.err.println("Invalid arguments. Use RecursiveWalk <input file> <output file>");
             return;
         }
         Path in, out;
@@ -55,7 +55,7 @@ public class RecursiveWalk {
                     Helper.log("Invalid path:" + filename, e);
                     writer.write(Helper.getOutputFormat(filename, 0));
                 } catch (IOException e) {
-                    Helper.log("", e);
+                    Helper.log("Read or write error occurred", e);
                     writer.write(Helper.getOutputFormat(filename, 0));
                 }
                 filename = reader.readLine();

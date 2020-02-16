@@ -68,7 +68,18 @@ public class Walk {
              BufferedWriter writer = Files.newBufferedWriter(out)) {
             String filename = reader.readLine();
             while (filename != null) {
-                writer.write(hash(filename));
+                try {
+                    writer.write(hash(filename));
+                } catch (FileNotFoundException e) {
+                    Helper.log("No such file: " + filename, e);
+                    writer.write(Helper.getOutputFormat(filename, 0));
+                } catch (InvalidPathException e) {
+                    Helper.log("Invalid path:" + filename, e);
+                    writer.write(Helper.getOutputFormat(filename, 0));
+                } catch (IOException e) {
+                    Helper.log("Read or write error occurred", e);
+                    writer.write(Helper.getOutputFormat(filename, 0));
+                }
                 filename = reader.readLine();
             }
         } catch (FileNotFoundException e) {
