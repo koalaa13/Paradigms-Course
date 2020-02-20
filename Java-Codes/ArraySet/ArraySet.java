@@ -6,7 +6,7 @@ public class ArraySet<T> extends AbstractSet<T> implements NavigableSet<T> {
     private final Comparator<? super T> comparator;
     private final List<T> data;
 
-    public class ReversedList<U> extends AbstractList<U> {
+    public static class ReversedList<U> extends AbstractList<U> {
         private boolean reversed;
         private final List<U> data;
 
@@ -30,13 +30,11 @@ public class ArraySet<T> extends AbstractSet<T> implements NavigableSet<T> {
     }
 
     public ArraySet() {
-        comparator = null;
-        data = new ArrayList<>();
+        this(Collections.emptyList(), null);
     }
 
     public ArraySet(Collection<? extends T> data) {
-        comparator = null;
-        this.data = new ArrayList<>(new TreeSet<>(data));
+        this(data, null);
     }
 
     public ArraySet(Collection<? extends T> data, Comparator<? super T> comparator) {
@@ -49,7 +47,7 @@ public class ArraySet<T> extends AbstractSet<T> implements NavigableSet<T> {
     private ArraySet(List<T> data, Comparator<? super T> comparator) {
         this.comparator = comparator;
         this.data = data;
-        if (data instanceof ReversedList) {
+        if (data instanceof ReversedList ) {
             ((ReversedList) data).reverse();
         }
     }

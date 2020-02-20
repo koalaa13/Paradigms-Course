@@ -1,17 +1,33 @@
-package ru.ifmo.rain.maksimov.walk;
+package ru.itmo.rain.maksimov.walk;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.FileNotFoundException;
-import java.io.Writer;
+import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 
 public class RecursiveWalk {
+    private final static int BUFFER_SIZE = 8192;
+
+    public static String hash(String filename) {
+        final int PRIME_KEY = 0x01000193;
+        int res = 0x811c9dc5;
+        try (InputStream fileInputStream = Files.newInputStream(Paths.get(filename))) {
+            byte[] buf = new byte[BUFFER_SIZE];
+            for (int readed; (readed = fileInputStream.read(buf, 0, BUFFER_SIZE)) >= 0; ) {
+                for (int i = 0; i < readed; ++i) {
+                    res *= PRIME_KEY;
+                    res ^= buf[i] & 0xff;
+                }
+            }
+        } catch (IOException e) {
+            Helper.log("IOException while hashing file " + filename, e);
+            return Helper.getOutputFormat(filename, 0);
+        }
+        return Helper.getOutputFormat(filename, res);
+    }
+
     public static void main(String[] args) {
         if (args == null || args.length != 2 || args[0] == null || args[1] == null) {
-            System.err.println("Invalid arguments. Use RecursiveWalk <input file> <output file>");
+            Helper.log("Invalid arguments. Use RecursiveWalk <input file> <output file>", null);
             return;
         }
         Path in, out;
@@ -19,7 +35,6 @@ public class RecursiveWalk {
             in = Paths.get(args[0]);
         } catch (InvalidPathException e) {
             Helper.log("Invalid input file: " + args[0], e);
-            // e.printStackTrace();
             return;
         }
 
@@ -27,7 +42,6 @@ public class RecursiveWalk {
             out = Paths.get(args[1]);
         } catch (InvalidPathException e) {
             Helper.log("Invalid output file: " + args[1], e);
-            // e.printStackTrace();
             return;
         }
 
@@ -36,36 +50,38 @@ public class RecursiveWalk {
                 Files.createDirectories(out.getParent());
             } catch (IOException e) {
                 Helper.log("Can not create output file", e);
-                // e.printStackTrace();
                 return;
             }
         }
 
-        try (BufferedReader reader = Files.newBufferedReader(in);
-             BufferedWriter writer = Files.newBufferedWriter(out)) {
-            String filename = reader.readLine();
-            while (filename != null) {
-                try {
-                    MyVisitor visitor = new MyVisitor(writer);
-                    Files.walkFileTree(Paths.get(filename), visitor);
-                } catch (FileNotFoundException e) {
-                    Helper.log("No such file: " + filename, e);
-                    writer.write(Helper.getOutputFormat(filename, 0));
-                } catch (InvalidPathException e) {
-                    Helper.log("Invalid path:" + filename, e);
-                    writer.write(Helper.getOutputFormat(filename, 0));
-                } catch (IOException e) {
-                    Helper.log("Read or write error occurred", e);
-                    writer.write(Helper.getOutputFormat(filename, 0));
+        try (BufferedReader reader = Files.newBufferedReader(in)) {
+            try (BufferedWriter writer = Files.newBufferedWriter(out)) {
+                String filename = reader.readLine();
+                while (filename != null) {
+                    try {
+                        MyVisitor visitor = new MyVisitor(writer);
+                        Files.walkFileTree(Paths.get(filename), visitor);
+                    } catch (FileNotFoundException e) {
+                        Helper.log("No such file: " + filename, e);
+                        writer.write(Helper.getOutputFormat(filename, 0));
+                    } catch (InvalidPathException e) {
+                        Helper.log("Invalid path:" + filename, e);
+                        writer.write(Helper.getOutputFormat(filename, 0));
+                    } catch (IOException e) {
+                        Helper.log("Read or write error occurred", e);
+                        writer.write(Helper.getOutputFormat(filename, 0));
+                    }
+                    filename = reader.readLine();
                 }
-                filename = reader.readLine();
+            } catch (FileNotFoundException e) {
+                Helper.log("No such output file", e);
+            } catch (IOException e) {
+                Helper.log("Read or write error occurred with output file", e);
             }
         } catch (FileNotFoundException e) {
-            Helper.log("No such input or output file", e);
-            // e.printStackTrace();
+            Helper.log("No such input file", e);
         } catch (IOException e) {
-            Helper.log("Read or write error occurred", e);
-            // e.printStackTrace();
+            Helper.log("Read or write error occurred with input file", e);
         }
     }
 
@@ -78,7 +94,7 @@ public class RecursiveWalk {
 
         @Override
         public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-            writer.write(Walk.hash(file.toString()));
+            writer.write(hash(file.toString()));
             return FileVisitResult.CONTINUE;
         }
     }
