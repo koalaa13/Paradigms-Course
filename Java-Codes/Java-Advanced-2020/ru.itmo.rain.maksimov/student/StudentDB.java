@@ -157,30 +157,42 @@ public class StudentDB implements AdvancedStudentGroupQuery {
                 .collect(Collectors.toMap(Student::getLastName, Student::getFirstName, BinaryOperator.minBy(String::compareTo)));
     }
 
-    @Override
-    public String getMostPopularName(Collection<Student> students) {
+    /**
+     * Returns a map from full name to count of groups that contains a student with this full name
+     */
+    private Map<String, Integer> nameMap(Collection<Student> students) {
         return students.stream()
-                .collect(Collectors.toMap(this::getStudentFullName,
-                        student -> students.stream()
-                                .filter(student1 -> getStudentFullName(student1).equals(getStudentFullName(student)))
-                                .map(Student::getGroup)
-                                .distinct()
-                                .count(),
-                        (entry1, entry2) -> entry1))
-                .entrySet().stream()
-                .max(Map.Entry.<String, Long>comparingByValue().thenComparing(Map.Entry::getKey))
-                .orElse(Map.entry("", 0L))
+                .collect(Collectors.groupingBy(this::getStudentFullName,
+                        Collectors.mapping(Student::getGroup,
+                                Collectors.collectingAndThen(Collectors.toSet(), Set::size))));
+    }
+
+    private String getPriorityStudent(Map<String, Integer> priority) {
+        return priority.entrySet().stream()
+                .max(Map.Entry.<String, Integer>comparingByValue().thenComparing(Map.Entry::getKey))
+                .orElse(Map.entry("", 0))
                 .getKey();
     }
 
-    private Map<Integer, String> getIdsMap(Collection<Student> students, Function<Student, String> toGet) {
-        return students.stream().collect(Collectors.toMap(Student::getId, toGet));
+    @Override
+    public String getMostPopularName(Collection<Student> students) {
+        return getPriorityStudent(nameMap(students));
+    }
+
+    private List<String> getStudentsFieldAsList(Collection<Student> students, Function<Student, String> toGet) {
+        return students.stream()
+                .map(toGet)
+                .collect(Collectors.toList());
+    }
+
+    private List<String> getByIndices(List<String> students, int[] indices) {
+        return Arrays.stream(indices)
+                .mapToObj(students::get)
+                .collect(Collectors.toList());
     }
 
     private List<String> getSomething(Collection<Student> students, int[] indices, Function<Student, String> toGet) {
-        return Arrays.stream(indices)
-                .mapToObj(id -> getIdsMap(students, toGet).get(id))
-                .collect(Collectors.toList());
+        return getByIndices(getStudentsFieldAsList(students, toGet), indices);
     }
 
     @Override

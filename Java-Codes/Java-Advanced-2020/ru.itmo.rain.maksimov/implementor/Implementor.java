@@ -75,7 +75,7 @@ public class Implementor implements Impler {
     private String getClassHead(Class<?> token) {
         return getPackage(token) + "public class " + getClassName(token) + ' ' +
                 (token.isInterface() ? "implements " : "extends ") +
-                token.getSimpleName() + " {" + END_OF_LINE;
+                token.getCanonicalName() + " {" + END_OF_LINE;
     }
 
     private String getReturnTypeAndName(Class<?> token, Executable executable) {
@@ -183,7 +183,7 @@ public class Implementor implements Impler {
         if (token == null || root == null) {
             throw new ImplerException("Arguments can not be null");
         }
-        if (token.isPrimitive() || token.isArray() || token == Enum.class || Modifier.isFinal(token.getModifiers())) {
+        if (token.isPrimitive() || token.isArray() || token == Enum.class || Modifier.isFinal(token.getModifiers()) || Modifier.isPrivate(token.getModifiers())) {
             throw new ImplerException("Incorrect class token");
         }
         root = root.resolve(token.getPackageName().replace('.', File.separatorChar)).resolve(getClassName(token) + ".java");
