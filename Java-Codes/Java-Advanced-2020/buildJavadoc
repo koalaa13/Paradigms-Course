@@ -1,0 +1,5 @@
+#!/bin/bash
+package="src/ru/itmo/rain/maksimov/implementor/"
+data="src/info/kgeorgiy/java/advanced/implementor/"
+
+javadoc -d javadoc -private -author -version $package"Implementor.java" $data"Impler.java" $data"ImplerException.java" $data"JarImpler.java" $package"/../Helper.java"

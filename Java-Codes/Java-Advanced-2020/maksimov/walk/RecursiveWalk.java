@@ -1,5 +1,7 @@
 package ru.itmo.rain.maksimov.walk;
 
+import ru.itmo.rain.maksimov.Helper;
+
 import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -27,7 +29,7 @@ public class RecursiveWalk {
 
     public static void main(String[] args) {
         if (args == null || args.length != 2 || args[0] == null || args[1] == null) {
-            Helper.log("Invalid arguments. Use RecursiveWalk <input file> <output file>", null);
+            Helper.log("Invalid arguments. Use RecursiveWalk <input file> <output file>");
             return;
         }
         Path in, out;
